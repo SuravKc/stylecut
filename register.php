@@ -22,27 +22,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role = $_POST['role'] ?? 'customer';
     $barber_password = $_POST['barber_password'] ?? '';
 
-    if (empty($name) || empty($email) || empty($password)) {
+    if (empty($name) || empty($email) || empty($password) || empty($phone) || empty($address)) {
 
-        $error = 'Name, email and password are required';
+    $error = 'All fields are required';
 
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+} elseif (!preg_match("/^[A-Za-z ]+$/", $name)) {
 
-        $error = 'Please enter a valid email address';
+    $error = 'Full name must contain letters only';
 
-    } elseif (strlen($password) < 4) {
+} elseif (!preg_match("/^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com)$/", $email)) {
 
-        $error = 'Password must be at least 4 characters';
+    $error = 'Please use a Gmail, Yahoo, or Outlook email address';
 
-    } elseif (!empty($phone) && !preg_match('/^\d{10}$/', $phone)) {
+} elseif (strlen($password) < 8) {
 
-        $error = 'Phone number must be exactly 10 digits';
+    $error = 'Password must be at least 8 characters';
 
-    } elseif ($role === 'barber' && $barber_password !== 'Stylecut123') {
+} elseif (!preg_match('/^9[678]\d{8}$/', $phone)) {
 
-        $error = 'Invalid barber registration password';
+    $error = 'Please enter a valid 10-digit Nepali mobile number';
 
-    } else {
+} elseif (strlen(trim($address)) < 5) {
+
+    $error = 'Please enter a valid address';
+
+} elseif ($role === 'barber' && $barber_password !== 'Stylecut123') {
+
+    $error = 'Invalid barber registration password';
+
+} else {
 
         try {
 
@@ -147,46 +155,61 @@ require_once 'includes/header.php';
         <div class="form-group">
             <label>Full Name *</label>
             <input
-                type="text"
-                name="name"
-                required
-                value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>">
+    type="text"
+    name="name"
+    required
+    pattern="[A-Za-z ]+"
+    title="Full name should contain letters and spaces only"
+    value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>">
         </div>
 
         <div class="form-group">
-            <label>Email *</label>
-            <input
-                type="email"
-                name="email"
-                required
-                placeholder="yourname@example.com"
-                value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
-        </div>
+    <label>Email *</label>
+    <input
+    type="email"
+    name="email"
+    required
+    pattern="[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com)"
+    title="Use a Gmail, Yahoo, or Outlook email address"
+    placeholder="yourname@gmail.com"
+    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+</div>
 
         <div class="form-group">
-            <label>Password *</label>
-            <input
-                type="password"
-                name="password"
-                required>
-        </div>
+    <label>Password *</label>
+    <input
+        type="password"
+        name="password"
+        required
+        minlength="8"
+        maxlength="20"
+        title="Password must be at least 8 characters">
+</div>
 
         <div class="form-group">
-            <label>Phone</label>
-            <input
-                type="text"
-                name="phone"
-                pattern="\d{10}"
-                placeholder="9841000000"
-                value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
-        </div>
+    <label>Phone *</label>
+    <input
+        type="text"
+        name="phone"
+        required
+        pattern="9[678][0-9]{8}"
+        minlength="10"
+        maxlength="10"
+        title="Enter a valid 10-digit Nepali mobile number"
+        placeholder="98XXXXXXXX"
+        value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
+</div>
 
         <div class="form-group">
-            <label>Address</label>
-            <textarea
-                name="address"
-                rows="3"><?php echo htmlspecialchars($_POST['address'] ?? ''); ?></textarea>
-        </div>
+    <label>Address *</label>
+    <textarea
+        name="address"
+        rows="3"
+        required
+        minlength="5"
+        maxlength="100"
+        placeholder="Enter your address"><?php echo htmlspecialchars($_POST['address'] ?? ''); ?></textarea>
+</div>
 
         <div class="form-group">
 
