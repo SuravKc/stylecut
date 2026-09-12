@@ -12,6 +12,7 @@ if (!isLoggedIn() || !isCustomer()) {
 $user = getUserById($pdo, $_SESSION['user_id']);
 $services = getAllServices($pdo);
 $barbers = getAllBarbers($pdo);
+$selected_service_id = intval($_GET['service_id'] ?? 0);
 
 $page_title = 'Book Appointment - Stylecut Nepal';
 require_once '../includes/header.php';
@@ -34,7 +35,7 @@ require_once '../includes/header.php';
             <select name="service_id" id="service_id" required>
                 <option value="">-- Select a service --</option>
                 <?php foreach ($services as $service): ?>
-                    <option value="<?php echo $service['id']; ?>" data-price="<?php echo $service['price']; ?>">
+                    <option value="<?php echo $service['id']; ?>" data-price="<?php echo $service['price']; ?>" <?php echo $selected_service_id === (int)$service['id'] ? 'selected' : ''; ?>>
                         <?php echo htmlspecialchars($service['name']); ?> - NPR <?php echo $service['price']; ?>
                     </option>
                 <?php endforeach; ?>
@@ -123,6 +124,11 @@ function updatePrice() {
 
 serviceSelect.addEventListener('change', updatePrice);
 useBonus.addEventListener('change', updatePrice);
+
+// If service was pre-selected via URL, update price immediately
+if (serviceSelect.value) {
+    updatePrice();
+}
 
 
 // Check all slots
