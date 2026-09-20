@@ -11,6 +11,12 @@ if (isLoggedIn()) {
 
 $error = '';
 $success = '';
+$redirect_target = $_GET['redirect'] ?? ($_POST['redirect'] ?? '');
+if (!empty($redirect_target)) {
+    if (strpos($redirect_target, '://') !== false || strpos($redirect_target, '//') === 0) {
+        $redirect_target = '';
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -143,7 +149,7 @@ require_once 'includes/header.php';
         </div>
 
         <div class="text-center" style="margin-top:20px;">
-            <a href="login.php" class="btn btn-large">
+            <a href="login.php<?php echo !empty($redirect_target) ? '?redirect=' . urlencode($redirect_target) : ''; ?>" class="btn btn-large">
                 Login Now
             </a>
         </div>
@@ -151,6 +157,9 @@ require_once 'includes/header.php';
     <?php else: ?>
 
     <form method="POST">
+        <?php if (!empty($redirect_target)): ?>
+            <input type="hidden" name="redirect" value="<?php echo htmlspecialchars($redirect_target); ?>">
+        <?php endif; ?>
 
         <div class="form-group">
             <label>Full Name *</label>
@@ -253,7 +262,7 @@ require_once 'includes/header.php';
 
         Already have an account?
 
-        <a href="login.php">Login here</a>
+        <a href="login.php<?php echo !empty($redirect_target) ? '?redirect=' . urlencode($redirect_target) : ''; ?>">Login here</a>
 
     </div>
 
