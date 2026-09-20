@@ -23,7 +23,11 @@ $service_meta = [
 ];
 
 if (!function_exists('getServiceMeta')) {
-    function getServiceMeta($service) {
+    /**
+     * @param array $service
+     * @return array
+     */
+    function getServiceMeta(array $service): array {
         global $service_meta;
         if (isset($service_meta[$service['id']])) {
             return $service_meta[$service['id']];
