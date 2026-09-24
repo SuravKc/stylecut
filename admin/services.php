@@ -9,8 +9,43 @@ if (!isLoggedIn() || !isAdmin()) {
     redirect('../login.php');
 }
 
+// Ensure image column exists in database
+ensureServicesImageColumn($pdo);
+
+// Image upload processor
+$handleServiceImageUpload = function() {
+    if (isset($_FILES['service_image']) && $_FILES['service_image']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['service_image'];
+        $allowed_exts = ['jpg', 'jpeg', 'png', 'webp'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+        if (!in_array($ext, $allowed_exts)) {
+            throw new Exception('Invalid image format. Allowed formats: JPG, JPEG, PNG, WEBP.');
+        }
+
+        if ($file['size'] > 5 * 1024 * 1024) {
+            throw new Exception('Image size exceeds 5MB limit.');
+        }
+
+        $upload_dir = __DIR__ . '/../uploads/services/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+
+        $filename = 'service_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+        $target_file = $upload_dir . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $target_file)) {
+            throw new Exception('Failed to save uploaded service image.');
+        }
+
+        return 'uploads/services/' . $filename;
+    }
+    return null;
+};
+
 // Handle Actions (Add, Edit, Delete, Toggle Status)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
 
     try {
@@ -25,11 +60,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 throw new Exception('Please enter valid service name, price, and duration.');
             }
 
+            $uploaded_image = $handleServiceImageUpload();
+            if (empty($uploaded_image)) {
+                $lname = strtolower($name);
+                if (strpos($lname, 'beard') !== false) {
+                    $uploaded_image = 'assets/images/services/beard.jpg';
+                } elseif (strpos($lname, 'facial') !== false) {
+                    $uploaded_image = 'assets/images/services/facial.jpg';
+                } elseif (strpos($lname, 'massage') !== false) {
+                    $uploaded_image = 'assets/images/services/massage.jpg';
+                } else {
+                    $uploaded_image = 'assets/images/services/haircut.jpg';
+                }
+            }
+
             $stmt = $pdo->prepare("
-                INSERT INTO services (name, description, price, duration_minutes, is_active)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO services (name, description, price, duration_minutes, is_active, image)
+                VALUES (?, ?, ?, ?, ?, ?)
             ");
-            $stmt->execute([$name, $description, $price, $duration, $is_active]);
+            $stmt->execute([$name, $description, $price, $duration, $is_active, $uploaded_image]);
             $_SESSION['success'] = "Service '{$name}' created successfully!";
 
         } elseif ($action === 'edit') {
@@ -44,12 +93,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 throw new Exception('Please enter valid service details.');
             }
 
+            $uploaded_image = $handleServiceImageUpload();
+            $existing_image = trim($_POST['current_image'] ?? '');
+            $final_image = (!empty($uploaded_image)) ? $uploaded_image : $existing_image;
+
+            if (empty($final_image)) {
+                $final_image = 'assets/images/services/haircut.jpg';
+            }
+
             $stmt = $pdo->prepare("
                 UPDATE services 
-                SET name = ?, description = ?, price = ?, duration_minutes = ?, is_active = ?
+                SET name = ?, description = ?, price = ?, duration_minutes = ?, is_active = ?, image = ?
                 WHERE id = ?
             ");
-            $stmt->execute([$name, $description, $price, $duration, $is_active, $id]);
+            $stmt->execute([$name, $description, $price, $duration, $is_active, $final_image, $id]);
             $_SESSION['success'] = "Service '{$name}' updated successfully!";
 
         } elseif ($action === 'delete') {
@@ -153,6 +210,7 @@ require_once '../includes/header.php';
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Photo</th>
                 <th>Service Name</th>
                 <th>Description</th>
                 <th>Price (NPR)</th>
@@ -163,9 +221,15 @@ require_once '../includes/header.php';
             </tr>
         </thead>
         <tbody>
-            <?php if (count($services) > 0): foreach ($services as $srv): ?>
+            <?php if (count($services) > 0): foreach ($services as $srv): 
+                $srv_img_url = getServiceImageUrl($srv['image'] ?? '');
+                $srv_with_url = array_merge($srv, ['image_url' => $srv_img_url]);
+            ?>
             <tr>
                 <td><strong>#<?php echo $srv['id']; ?></strong></td>
+                <td>
+                    <img src="<?php echo htmlspecialchars($srv_img_url); ?>" alt="<?php echo htmlspecialchars($srv['name']); ?>" style="width: 48px; height: 48px; border-radius: 6px; object-fit: cover; border: 2px solid #000; display: block; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                </td>
                 <td>
                     <strong style="font-size: 15px;"><?php echo htmlspecialchars($srv['name']); ?></strong>
                 </td>
@@ -192,7 +256,7 @@ require_once '../includes/header.php';
                 </td>
                 <td>
                     <div class="action-btn-group">
-                        <button type="button" class="btn-action-view" onclick='openEditServiceModal(<?php echo htmlspecialchars(json_encode($srv), ENT_QUOTES, "UTF-8"); ?>)'>
+                        <button type="button" class="btn-action-view" onclick='openEditServiceModal(<?php echo htmlspecialchars(json_encode($srv_with_url), ENT_QUOTES, "UTF-8"); ?>)'>
                             ✏️ Edit
                         </button>
                         
@@ -216,7 +280,7 @@ require_once '../includes/header.php';
             </tr>
             <?php endforeach; else: ?>
             <tr>
-                <td colspan="8" class="text-center" style="padding: 30px;">
+                <td colspan="9" class="text-center" style="padding: 30px;">
                     No services found. Click "+ Add New Service" to create one!
                 </td>
             </tr>
@@ -231,9 +295,10 @@ require_once '../includes/header.php';
         <span class="admin-modal-close" onclick="closeServiceModal()">&times;</span>
         <h2 id="serviceModalHeading" style="margin-bottom: 20px;">+ Add New Service</h2>
 
-        <form method="POST" id="serviceForm" class="login-form" style="max-width: 100%; border: none; padding: 0;">
+        <form method="POST" id="serviceForm" enctype="multipart/form-data" class="login-form" style="max-width: 100%; border: none; padding: 0;">
             <input type="hidden" name="action" id="formAction" value="add">
             <input type="hidden" name="service_id" id="formServiceId" value="">
+            <input type="hidden" name="current_image" id="formCurrentImage" value="">
 
             <div class="form-group">
                 <label for="srvName">Service Name *</label>
@@ -243,6 +308,25 @@ require_once '../includes/header.php';
             <div class="form-group">
                 <label for="srvDesc">Description</label>
                 <textarea name="description" id="srvDesc" rows="3" placeholder="Brief details about what is included in this service..."></textarea>
+            </div>
+
+            <!-- Service Image Upload / Edit Field with Preview -->
+            <div class="form-group" style="margin: 15px 0;">
+                <label for="srvImage" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 700;">Service Photo / Image</span>
+                    <small id="imageStatusLabel" style="color: #666; font-weight: normal; font-size: 12px;"></small>
+                </label>
+                <div style="display: flex; gap: 16px; align-items: center; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px;">
+                    <div style="width: 76px; height: 76px; border-radius: 6px; border: 2px solid #000; overflow: hidden; background: #fff; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+                        <img id="imagePreview" src="/stylecut/assets/images/services/haircut.jpg" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                    </div>
+                    <div style="flex: 1;">
+                        <input type="file" name="service_image" id="srvImage" accept="image/png, image/jpeg, image/jpg, image/webp" style="margin-bottom: 6px; font-size: 13px; width: 100%;">
+                        <div id="imageHelpText" style="font-size: 12px; color: #666; line-height: 1.4;">
+                            Upload a JPG, PNG, or WEBP photo (max 5MB).
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="grid-2">
@@ -277,10 +361,36 @@ require_once '../includes/header.php';
 </div>
 
 <script>
+const srvImageInput = document.getElementById('srvImage');
+const imagePreview = document.getElementById('imagePreview');
+const imageStatusLabel = document.getElementById('imageStatusLabel');
+const imageHelpText = document.getElementById('imageHelpText');
+const formCurrentImage = document.getElementById('formCurrentImage');
+
+// Live preview when selecting a new file
+if (srvImageInput) {
+    srvImageInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (imagePreview) imagePreview.src = e.target.result;
+                if (imageStatusLabel) imageStatusLabel.textContent = 'New image selected';
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+}
+
 function openAddServiceModal() {
     document.getElementById('serviceModalHeading').textContent = '+ Add New Service';
     document.getElementById('formAction').value = 'add';
     document.getElementById('formServiceId').value = '';
+    if (formCurrentImage) formCurrentImage.value = '';
+    if (srvImageInput) srvImageInput.value = '';
+    if (imagePreview) imagePreview.src = '/stylecut/assets/images/services/haircut.jpg';
+    if (imageStatusLabel) imageStatusLabel.textContent = 'Optional photo upload';
+    if (imageHelpText) imageHelpText.textContent = 'Upload a photo (JPG, PNG, WEBP). If none selected, a category photo will be assigned automatically.';
+
     document.getElementById('srvName').value = '';
     document.getElementById('srvDesc').value = '';
     document.getElementById('srvPrice').value = '';
@@ -295,6 +405,14 @@ function openEditServiceModal(srv) {
     document.getElementById('serviceModalHeading').textContent = '✏️ Edit Service: ' + srv.name;
     document.getElementById('formAction').value = 'edit';
     document.getElementById('formServiceId').value = srv.id;
+    if (formCurrentImage) formCurrentImage.value = srv.image || '';
+    if (srvImageInput) srvImageInput.value = '';
+    
+    const currentImgUrl = srv.image_url || '/stylecut/assets/images/services/haircut.jpg';
+    if (imagePreview) imagePreview.src = currentImgUrl;
+    if (imageStatusLabel) imageStatusLabel.textContent = 'Current photo loaded';
+    if (imageHelpText) imageHelpText.textContent = 'Choose a new photo to replace current, or leave empty to keep existing photo.';
+
     document.getElementById('srvName').value = srv.name;
     document.getElementById('srvDesc').value = srv.description || '';
     document.getElementById('srvPrice').value = parseFloat(srv.price);

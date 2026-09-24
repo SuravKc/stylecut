@@ -20,6 +20,7 @@
                 <?php if (isset($_SESSION['user_role'])): ?>
                     <?php if ($_SESSION['user_role'] === 'customer'): ?>
                         <li><a href="/stylecut/index.php">Home</a></li>
+                        <li><a href="/stylecut/customer/dashboard.php">Dashboard</a></li>
                         <li><a href="/stylecut/customer/booking.php">Book</a></li>
                         <li><a href="/stylecut/customer/my-bookings.php">My Bookings</a></li>
                         <li><a href="/stylecut/customer/profile.php">Profile</a></li>

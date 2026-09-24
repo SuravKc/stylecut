@@ -143,13 +143,14 @@ require_once 'includes/header.php';
             $service_desc = $service['description'] ?? 'Precision grooming experience with professional stylist.';
             $service_price = number_format($service['price'], 2);
             $service_duration = (int)$service['duration_minutes'];
+            $service_img = !empty($service['image']) ? getServiceImageUrl($service['image']) : $meta['image'];
 
             $service_payload = [
                 'id' => $service_id,
                 'name' => $service_name,
                 'category' => $meta['category'],
                 'icon' => $meta['icon'],
-                'image' => $meta['image'],
+                'image' => $service_img,
                 'duration' => $service_duration,
                 'price' => $service_price,
                 'description' => $service_desc

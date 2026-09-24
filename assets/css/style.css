@@ -1058,6 +1058,78 @@ header {
     font-size: 18px;
 }
 
+/* Khalti Sandbox Styles */
+.method-khalti {
+    border-color: #5c2d91;
+    background: #faf5ff;
+}
+
+.method-khalti:hover {
+    background: #f3e8ff;
+}
+
+.khalti-sandbox-tag {
+    display: inline-block;
+    background: #5c2d91;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+}
+
+.khalti-pill {
+    background: #f59e0b;
+    color: #111827;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    letter-spacing: 0.5px;
+}
+
+.khalti-box {
+    border: 3px solid #5c2d91 !important;
+    background: #faf5ff !important;
+    border-radius: 8px;
+    text-align: left !important;
+    padding: 22px !important;
+}
+
+.khalti-test-card {
+    background: #ffffff;
+    border: 1.5px dashed #a855f7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 14px;
+}
+
+.khalti-test-card .test-card-title {
+    font-weight: 700;
+    color: #5c2d91;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.khalti-test-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px;
+    font-size: 13px;
+}
+
+.khalti-test-grid code {
+    background: #f3e8ff;
+    color: #5c2d91;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 12px;
+}
+
 
 /* ==========================================================
    UPLOAD SECTION
@@ -1917,6 +1989,11 @@ footer {
     color: #ffffff;
 }
 
+.payment-badge.khalti {
+    background: #5c2d91;
+    color: #ffffff;
+}
+
 .screenshot-link-btn {
     display: inline-flex;
     align-items: center;
@@ -2142,6 +2219,28 @@ footer {
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 25px;
     margin: 40px auto 0;
+    width: 100%;
+    max-width: 1200px;
+    align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+    .services-grid {
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .services-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .service-card {
@@ -2151,6 +2250,7 @@ footer {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    height: 100%;
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     cursor: pointer;
     position: relative;
@@ -2200,6 +2300,11 @@ footer {
     margin-bottom: 10px;
     color: #000000;
     line-height: 1.25;
+    min-height: 54px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .service-card-desc {
@@ -2208,6 +2313,11 @@ footer {
     line-height: 1.6;
     margin-bottom: 22px;
     flex-grow: 1;
+    min-height: 48px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .service-card-bottom {
@@ -2217,6 +2327,7 @@ footer {
     padding-top: 16px;
     border-top: 2px solid #f0f0f0;
     gap: 15px;
+    margin-top: auto;
 }
 
 .service-card-price {

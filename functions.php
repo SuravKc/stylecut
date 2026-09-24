@@ -3,6 +3,8 @@
 // functions.php - Helper Functions
 // ==============================================
 
+require_once __DIR__ . '/includes/khalti.php';
+
 if (!function_exists('isLoggedIn')) {
     function isLoggedIn() {
         return isset($_SESSION['user_id']);
@@ -137,7 +139,7 @@ if (!function_exists('getAllAppointmentsAdmin')) {
                    cu.name as customer_name, cu.email as customer_email, cu.phone as customer_phone,
                    bu.name as barber_name, b.specialty as barber_specialty,
                    s.name as service_name, s.duration_minutes,
-                   p.payment_method, p.payment_status, p.screenshot_path, p.amount as payment_amount, p.paid_at
+                   p.payment_method, p.payment_status, p.screenshot_path, p.amount as payment_amount, p.paid_at, p.transaction_id, p.pidx
             FROM appointments a
             JOIN users cu ON a.customer_id = cu.id
             JOIN barbers b ON a.barber_id = b.id
@@ -318,6 +320,35 @@ if (!function_exists('getAllCustomersAdmin')) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();
+    }
+}
+
+if (!function_exists('ensureServicesImageColumn')) {
+    function ensureServicesImageColumn($pdo) {
+        static $checked = false;
+        if ($checked) return;
+        $checked = true;
+        try {
+            $stmt = $pdo->query("SHOW COLUMNS FROM services LIKE 'image'");
+            if ($stmt->rowCount() === 0) {
+                $pdo->exec("ALTER TABLE services ADD COLUMN image VARCHAR(255) NULL AFTER description");
+            }
+        } catch (Exception $e) {}
+    }
+}
+
+if (!function_exists('getServiceImageUrl')) {
+    function getServiceImageUrl($imagePath) {
+        if (empty($imagePath)) {
+            return '/stylecut/assets/images/services/haircut.jpg';
+        }
+        if (strpos($imagePath, 'http://') === 0 || strpos($imagePath, 'https://') === 0) {
+            return $imagePath;
+        }
+        if (strpos($imagePath, '/stylecut/') === 0) {
+            return $imagePath;
+        }
+        return '/stylecut/' . ltrim($imagePath, '/');
     }
 }
 ?>
