@@ -79,17 +79,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (paymentMethods.length) {
         function updatePaymentDisplay() {
-            const selected = document.querySelector('input[name="payment_method"]:checked').value;
+            const checkedInput = document.querySelector('input[name="payment_method"]:checked');
+            if (!checkedInput) return;
+            const selected = checkedInput.value;
             if (qrContainer) {
+                const khaltiBox = document.getElementById('khaltiBox');
                 const esewaQr = document.getElementById('esewaQr');
                 const bankQr = document.getElementById('bankQr');
                 const cashNote = document.getElementById('cashNote');
                 
+                if (khaltiBox) khaltiBox.style.display = selected === 'khalti' ? 'block' : 'none';
                 if (esewaQr) esewaQr.style.display = selected === 'esewa' ? 'block' : 'none';
                 if (bankQr) bankQr.style.display = selected === 'bank' ? 'block' : 'none';
                 if (cashNote) cashNote.style.display = selected === 'cash' ? 'block' : 'none';
                 
-                qrContainer.style.display = (selected === 'esewa' || selected === 'bank' || selected === 'cash') ? 'block' : 'none';
+                qrContainer.style.display = (selected === 'khalti' || selected === 'esewa' || selected === 'bank' || selected === 'cash') ? 'block' : 'none';
             }
             if (uploadSection) {
                 uploadSection.style.display = (selected === 'esewa' || selected === 'bank') ? 'block' : 'none';

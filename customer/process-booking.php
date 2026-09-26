@@ -32,6 +32,38 @@ if ($selected_date < $today) {
     redirect('booking.php');
 }
 
+// Prevent booking past hours for today
+if ($appointment_date === date('Y-m-d') && strtotime($appointment_time) <= strtotime(date('H:i:s'))) {
+    $_SESSION['error'] = 'Cannot book a time slot that has already passed today';
+    redirect('booking.php');
+}
+
+// Check Operating Hours:
+// Mon-Fri: 9AM - 7PM (Slots 09:00 to 18:00)
+// Saturday: 10AM - 6PM (Slots 10:00 to 17:00)
+// Sunday: Closed
+$day_of_week = date('w', $selected_date);
+
+if ($day_of_week == 0) {
+    $_SESSION['error'] = 'Stylecut is closed on Sundays. Please choose an appointment between Monday and Saturday.';
+    redirect('booking.php');
+}
+
+if ($day_of_week == 6) {
+    if (strtotime($appointment_time) < strtotime('10:00:00') || strtotime($appointment_time) >= strtotime('18:00:00')) {
+        $_SESSION['error'] = 'On Saturdays, Stylecut is open from 10:00 AM to 6:00 PM (last appointment at 5:00 PM).';
+        redirect('booking.php');
+    }
+}
+
+if ($day_of_week >= 1 && $day_of_week <= 5) {
+    if (strtotime($appointment_time) < strtotime('09:00:00') || strtotime($appointment_time) >= strtotime('19:00:00')) {
+        $_SESSION['error'] = 'On weekdays, Stylecut is open from 9:00 AM to 7:00 PM (last appointment at 6:00 PM).';
+        redirect('booking.php');
+    }
+}
+
+
 try {
     $stmt = $pdo->prepare("SELECT price FROM services WHERE id = ? AND is_active = 1");
     $stmt->execute([$service_id]);

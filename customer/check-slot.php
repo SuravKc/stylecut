@@ -20,6 +20,54 @@ if (!$barber_id || !$date || !$time) {
 
 /*
 |--------------------------------------------------------------------------
+| Check operating hours:
+| Mon-Fri: 9:00 AM - 7:00 PM (Last slot 6:00 PM)
+| Saturday: 10:00 AM - 6:00 PM (Last slot 5:00 PM)
+| Sunday: Closed
+|--------------------------------------------------------------------------
+*/
+$day_of_week = date('w', strtotime($date));
+
+// Sunday: Closed
+if ($day_of_week == 0) {
+    echo json_encode([
+        'status' => 'closed',
+        'message' => 'Stylecut is closed on Sundays'
+    ]);
+    exit;
+}
+
+// Saturday: 10AM - 6PM
+if ($day_of_week == 6) {
+    if (strtotime($time) < strtotime('10:00:00')) {
+        echo json_encode([
+            'status' => 'closed',
+            'message' => 'Stylecut opens at 10:00 AM on Saturdays'
+        ]);
+        exit;
+    }
+    if (strtotime($time) >= strtotime('18:00:00')) {
+        echo json_encode([
+            'status' => 'closed',
+            'message' => 'Stylecut closes at 6:00 PM on Saturdays'
+        ]);
+        exit;
+    }
+}
+
+// Mon-Fri: 9AM - 7PM
+if ($day_of_week >= 1 && $day_of_week <= 5) {
+    if (strtotime($time) < strtotime('09:00:00') || strtotime($time) >= strtotime('19:00:00')) {
+        echo json_encode([
+            'status' => 'closed',
+            'message' => 'Stylecut is open 9:00 AM - 7:00 PM on weekdays'
+        ]);
+        exit;
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
 | Automatically disable past time slots for TODAY
 |--------------------------------------------------------------------------
 */
