@@ -74,7 +74,12 @@ require_once '../includes/header.php';
         <h1 class="page-title" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
             📋 Appointment #<?php echo $appt['id']; ?>
         </h1>
-        <a href="appointments.php" class="btn btn-back">← Back to All Bookings</a>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="invoice.php?id=<?php echo $appt['id']; ?>" target="_blank" class="btn" style="background: #5c2d91; border-color: #5c2d91; color: #ffffff;">
+                📄 View / Print PDF Bill
+            </a>
+            <a href="appointments.php" class="btn btn-back">← Back to All Bookings</a>
+        </div>
     </div>
 
     <?php if ($success): ?>
@@ -288,9 +293,15 @@ require_once '../includes/header.php';
                 <span class="detail-value"><?php echo date('M d, Y h:i A', strtotime($appt['paid_at'])); ?></span>
             </div>
             <?php endif; ?>
+            <?php if (!empty($appt['transaction_id'])): ?>
+            <div class="detail-item">
+                <span class="detail-label">Transaction ID:</span>
+                <span class="detail-value"><code><?php echo htmlspecialchars($appt['transaction_id']); ?></code></span>
+            </div>
+            <?php endif; ?>
         </div>
 
-        <!-- Screenshot Review -->
+        <!-- Screenshot Review / Online Gateway Status -->
         <?php 
         $screenshot_path = $appt['screenshot_path'] ?? '';
         if ($screenshot_path):
@@ -314,6 +325,26 @@ require_once '../includes/header.php';
         <?php elseif ($appt['payment_method'] && in_array($appt['payment_method'], ['esewa', 'bank'])): ?>
             <div class="screenshot-section">
                 <p class="warning-text">⚠️ No payment screenshot uploaded by customer for this digital transaction.</p>
+            </div>
+        <?php elseif ($appt['payment_method'] === 'khalti'): ?>
+            <div class="screenshot-section" style="background: #faf5ff; border: 1.5px solid #d8b4fe; border-radius: 8px; padding: 16px; margin-top: 15px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <span style="font-size: 20px;">🟣</span>
+                            <strong style="color: #5c2d91; font-size: 15px;">Khalti Digital Payment Verified (Direct Gateway)</strong>
+                        </div>
+                        <p style="color: #4b5563; margin: 0; font-size: 13.5px;">
+                            This transaction was securely verified through the Khalti ePayment Gateway.
+                            <?php if (!empty($appt['transaction_id'])): ?>
+                                <br>Transaction ID: <strong><code><?php echo htmlspecialchars($appt['transaction_id']); ?></code></strong>
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                    <a href="invoice.php?id=<?php echo $appt['id']; ?>" target="_blank" class="btn btn-small" style="background: #5c2d91; border-color: #5c2d91; color: #ffffff;">
+                        📄 Print Official Bill
+                    </a>
+                </div>
             </div>
         <?php endif; ?>
     </div>

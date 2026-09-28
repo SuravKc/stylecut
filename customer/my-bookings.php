@@ -187,8 +187,10 @@ unset(
                 <?php if (!empty($appt['payment_method'])): ?>
                     <div class="appointment-detail-item">
                         <span class="appointment-detail-label">Payment:</span>
-                        <?php echo ucfirst($appt['payment_method']); ?>
-                        (<?php echo htmlspecialchars($appt['payment_status']); ?>)
+                        <span class="payment-badge <?php echo htmlspecialchars($appt['payment_method']); ?>" style="vertical-align: middle; margin-right: 4px;">
+                            <?php echo ucfirst($appt['payment_method']); ?>
+                        </span>
+                        <small style="color: #666; text-transform: capitalize;">(<?php echo htmlspecialchars($appt['payment_status']); ?>)</small>
                     </div>
                 <?php endif; ?>
 
@@ -198,6 +200,10 @@ unset(
 
                 <a href="view-booking.php?id=<?php echo $appt['id']; ?>" class="btn btn-small">
                     View Details
+                </a>
+
+                <a href="invoice.php?id=<?php echo $appt['id']; ?>" class="btn btn-small" target="_blank" style="background: #5c2d91; border-color: #5c2d91; color: #ffffff;">
+                    📄 Bill
                 </a>
 
                 <?php if ($appt['status'] == 'pending' || $appt['status'] == 'confirmed'): ?>

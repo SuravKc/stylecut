@@ -18,7 +18,7 @@ if (!$appointment_id) {
 $stmt = $pdo->prepare("
     SELECT a.*, s.name as service_name, s.duration_minutes,
            u.name as barber_name,
-           p.payment_method, p.payment_status, p.screenshot_path, p.amount as payment_amount, p.paid_at
+           p.payment_method, p.payment_status, p.screenshot_path, p.amount as payment_amount, p.paid_at, p.transaction_id, p.pidx
     FROM appointments a
     JOIN services s ON a.service_id = s.id
     JOIN barbers b ON a.barber_id = b.id
@@ -41,7 +41,12 @@ require_once '../includes/header.php';
 <div class="booking-details-container">
     <div class="details-header">
         <h1 class="page-title">📋 Booking Details</h1>
-        <a href="my-bookings.php" class="btn btn-back">← Back to My Bookings</a>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="invoice.php?id=<?php echo $appointment['id']; ?>" class="btn" target="_blank" style="background: #5c2d91; border-color: #5c2d91; color: #ffffff;">
+                📄 View PDF Bill
+            </a>
+            <a href="my-bookings.php" class="btn btn-back">← Back to My Bookings</a>
+        </div>
     </div>
 
     <div class="status-banner">
@@ -83,6 +88,9 @@ require_once '../includes/header.php';
             <?php if ($appointment['paid_at']): ?>
             <div class="detail-item"><span class="detail-label">Paid on:</span><span class="detail-value"><?php echo date('F d, Y \a\t h:i A', strtotime($appointment['paid_at'])); ?></span></div>
             <?php endif; ?>
+            <?php if (!empty($appointment['transaction_id'])): ?>
+            <div class="detail-item"><span class="detail-label">Transaction ID:</span><span class="detail-value"><code><?php echo htmlspecialchars($appointment['transaction_id']); ?></code></span></div>
+            <?php endif; ?>
         </div>
 
         <?php 
@@ -108,6 +116,26 @@ require_once '../includes/header.php';
         </div>
         <?php elseif ($appointment['payment_method'] && in_array($appointment['payment_method'], ['esewa', 'bank'])): ?>
             <div class="screenshot-section"><p class="warning-text">⚠️ No screenshot uploaded for this <?php echo $appointment['payment_method']; ?> payment.</p></div>
+        <?php elseif ($appointment['payment_method'] === 'khalti'): ?>
+            <div class="screenshot-section" style="background: #faf5ff; border: 1.5px solid #d8b4fe; border-radius: 8px; padding: 14px 18px; margin-top: 15px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span style="font-size: 20px;">🟣</span>
+                            <strong style="color: #5c2d91;">Khalti Payment Verified</strong>
+                        </div>
+                        <p style="color: #4b5563; margin: 0; font-size: 13.5px;">
+                            This appointment was paid digitally via Khalti ePayment Gateway.
+                            <?php if (!empty($appointment['transaction_id'])): ?>
+                                <br>Transaction ID: <code><?php echo htmlspecialchars($appointment['transaction_id']); ?></code>
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                    <a href="invoice.php?id=<?php echo $appointment['id']; ?>" target="_blank" class="btn btn-small" style="background: #5c2d91; border-color: #5c2d91; color: #ffffff;">
+                        📄 Print / Save Bill
+                    </a>
+                </div>
+            </div>
         <?php endif; ?>
     </div>
     <?php endif; ?>

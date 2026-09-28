@@ -207,6 +207,11 @@ require_once '../includes/header.php';
                                 <?php echo ucfirst($appt['payment_method']); ?>
                             </span>
                             <small style="color: #666; text-transform: capitalize;"><?php echo htmlspecialchars($appt['payment_status'] ?? 'pending'); ?></small>
+                            <?php if (!empty($appt['transaction_id'])): ?>
+                                <small style="font-size: 10px; color: #5c2d91; font-weight: 600;" title="Transaction: <?php echo htmlspecialchars($appt['transaction_id']); ?>">
+                                    🆔 <?php echo htmlspecialchars(substr($appt['transaction_id'], 0, 12)); ?><?php echo strlen($appt['transaction_id']) > 12 ? '..' : ''; ?>
+                                </small>
+                            <?php endif; ?>
                             <?php if ($appt['screenshot_path']): ?>
                                 <button type="button" class="screenshot-link-btn" onclick="openScreenshotModal('/stylecut/<?php echo htmlspecialchars($appt['screenshot_path']); ?>')">
                                     📷 View Receipt
@@ -266,6 +271,9 @@ require_once '../includes/header.php';
 
                         <a href="view-booking.php?id=<?php echo $appt['id']; ?>" class="btn-action-view" title="Full Booking Summary">
                             Details
+                        </a>
+                        <a href="invoice.php?id=<?php echo $appt['id']; ?>" target="_blank" class="btn-action-view" style="background: #faf5ff; color: #5c2d91; border-color: #d8b4fe;" title="Print Tax Invoice / Bill">
+                            📄 Bill
                         </a>
                     </div>
                 </td>

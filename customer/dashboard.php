@@ -118,6 +118,7 @@ require_once '../includes/header.php';
             </div>
             <div class="appointment-actions">
                 <a href="view-booking.php?id=<?php echo $appt['id']; ?>" class="btn btn-small">View Details</a>
+                <a href="invoice.php?id=<?php echo $appt['id']; ?>" target="_blank" class="btn btn-small" style="background: #5c2d91; border-color: #5c2d91; color: #ffffff;">📄 Bill</a>
             </div>
         </div>
     <?php endforeach; ?>
