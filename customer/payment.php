@@ -41,7 +41,8 @@ $user = $stmt->fetch();
 // ✅ CHECK FOR ERROR MESSAGES FROM SESSION AND CLEAR THEM
 $error = $_SESSION['payment_error'] ?? '';
 $success = $_SESSION['payment_success'] ?? '';
-unset($_SESSION['payment_error'], $_SESSION['payment_success']);
+$khalti_key_invalid = $_SESSION['khalti_key_invalid'] ?? false;
+unset($_SESSION['payment_error'], $_SESSION['payment_success'], $_SESSION['khalti_key_invalid']);
 
 $page_title = 'Payment - Stylecut Nepal';
 require_once '../includes/header.php';
@@ -49,7 +50,7 @@ require_once '../includes/header.php';
 
 <h1 class="page-title">💳 Payment</h1>
 
-<!-- ✅ DISPLAY ERROR MESSAGE -->
+<!-- Error Messages -->
 <?php if ($error): ?>
     <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
 <?php endif; ?>
@@ -123,8 +124,17 @@ require_once '../includes/header.php';
         
         <form action="process-payment.php" method="POST" enctype="multipart/form-data" id="paymentForm">
             <div class="payment-methods">
+                <label class="method-option method-khalti">
+                    <input type="radio" name="payment_method" value="khalti" checked>
+                    <span class="method-label-content">
+                        <span class="method-icon">🟣</span>
+                        <strong>Khalti</strong>
+                        <span class="khalti-sandbox-tag" style="background: #5c2d91;">DIGITAL WALLET</span>
+                    </span>
+                </label>
+
                 <label class="method-option">
-                    <input type="radio" name="payment_method" value="esewa" checked>
+                    <input type="radio" name="payment_method" value="esewa">
                     <span>💰 Esewa</span>
                 </label>
                 
@@ -139,22 +149,67 @@ require_once '../includes/header.php';
                 </label>
             </div>
 
-            <!-- QR Code Container -->
-            <div id="qrContainer" style="display: none; margin: 30px 0; text-align: center;">
-                <div id="esewaQr" class="qr-box" style="display: none;">
+            <!-- Payment Details & QR Code Container -->
+            <div id="qrContainer" style="display: block; margin: 25px 0;">
+                <!-- Khalti ePayment Card -->
+                <div id="khaltiBox" class="qr-box khalti-box" style="display: block;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid #e9d5ff; padding-bottom: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="../assets/images/khalti-logo.svg" alt="Khalti Logo" style="height: 32px;">
+                            <h3 style="margin: 0; color: #5c2d91;">Khalti ePayment Gateway</h3>
+                        </div>
+                        <span class="khalti-pill" style="background: #e9d5ff; color: #5c2d91;">INSTANT PAY</span>
+                    </div>
+
+                    <p style="color: #4b5563; font-size: 14px; margin-bottom: 14px; line-height: 1.5;">
+                        Pay directly and securely via <strong>Khalti Wallet / Mobile Banking</strong>. You will be redirected to complete payment with test or personal credentials, and your appointment will be processed automatically.
+                    </p>
+
+                    <div class="khalti-test-card">
+                        <div class="test-card-title">🔑 Demo Credentials (BCA Project Presentation)</div>
+                        <div class="khalti-test-grid">
+                            <div><strong>Test Wallet:</strong> <code>9800000000</code> - <code>9800000005</code></div>
+                            <div><strong>MPIN:</strong> <code>1111</code></div>
+                            <div><strong>OTP:</strong> <code>987654</code></div>
+                        </div>
+                        <small style="display: block; margin-top: 8px; color: #6b7280; font-size: 12px;">
+                            💡 Direct automated payment verification. No screenshot upload required.
+                        </small>
+                    </div>
+
+                    <div style="margin-top: 16px; padding: 14px; background: #ffffff; border: 1.5px solid #d8b4fe; border-radius: 8px;">
+                        <strong style="color: #5c2d91; display: block; margin-bottom: 8px; font-size: 14px;">Select Payment Checkout:</strong>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="submit" class="btn" style="flex: 1; min-width: 180px; background: #5c2d91; border-color: #5c2d91; color: #ffffff; padding: 10px 14px; font-weight: 700; cursor: pointer;">
+                                🟣 Pay with Khalti Checkout &rarr;
+                            </button>
+                            <a href="khalti-simulator.php" class="btn" style="flex: 1; min-width: 180px; background: #faf5ff; border: 2px solid #5c2d91; color: #5c2d91; padding: 10px 14px; font-weight: 700; text-align: center; text-decoration: none;">
+                                ⚡ Local Portal View 🧪
+                            </a>
+                        </div>
+                        <small style="color: #6b7280; font-size: 12px; display: block; margin-top: 8px;">
+                            💡 Both options connect to your database, register the payment, and confirm the appointment.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Esewa QR -->
+                <div id="esewaQr" class="qr-box" style="display: none; text-align: center;">
                     <h3>Scan with Esewa App</h3>
                     <img src="../assets/images/esewa-qr.png" alt="Esewa QR Code" class="qr-image">
                     <p>Merchant: Stylecut Nepal<br>Amount: NPR <?php echo number_format($booking['final_price'], 2); ?></p>
                 </div>
                 
-                <div id="bankQr" class="qr-box" style="display: none;">
+                <!-- Bank QR -->
+                <div id="bankQr" class="qr-box" style="display: none; text-align: center;">
                     <h3>Bank Transfer Details</h3>
                     <img src="../assets/images/bank-qr.png" alt="Bank QR Code" class="qr-image">
                     <p>Account: Stylecut Nepal<br>Bank: Everest Bank<br>Amount: NPR <?php echo number_format($booking['final_price'], 2); ?></p>
                 </div>
                 
-                <div id="cashNote" class="qr-box" style="display: none;">
-                    <p class="cash-note">💵 Pay cash at the shop</p>
+                <!-- Cash Note -->
+                <div id="cashNote" class="qr-box" style="display: none; text-align: center;">
+                    <p class="cash-note">💵 Pay cash at the shop upon your appointment arrival</p>
                 </div>
             </div>
 
@@ -167,7 +222,9 @@ require_once '../includes/header.php';
             </div>
 
             <div class="payment-actions">
-                <button type="submit" class="btn btn-large btn-block" id="proceedBtn">Confirm Payment</button>
+                <button type="submit" class="btn btn-large btn-block" id="proceedBtn">
+                    Pay with Khalti (NPR <?php echo number_format($booking['final_price'], 2); ?>) &rarr;
+                </button>
                 <a href="booking.php" class="btn btn-large btn-block cancel-btn">Cancel</a>
             </div>
         </form>
@@ -179,35 +236,65 @@ require_once '../includes/header.php';
 document.addEventListener('DOMContentLoaded', function() {
     const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
     const qrContainer = document.getElementById('qrContainer');
+    const khaltiBox = document.getElementById('khaltiBox');
     const esewaQr = document.getElementById('esewaQr');
     const bankQr = document.getElementById('bankQr');
     const cashNote = document.getElementById('cashNote');
     const uploadSection = document.getElementById('uploadSection');
+    const proceedBtn = document.getElementById('proceedBtn');
+    const finalPrice = '<?php echo number_format($booking['final_price'], 2); ?>';
     
     function updateDisplay() {
-        const selected = document.querySelector('input[name="payment_method"]:checked').value;
+        const checkedInput = document.querySelector('input[name="payment_method"]:checked');
+        if (!checkedInput) return;
+        const selected = checkedInput.value;
         
-        // Hide all QR boxes
+        // Hide all method boxes
+        if (khaltiBox) khaltiBox.style.display = 'none';
         if (esewaQr) esewaQr.style.display = 'none';
         if (bankQr) bankQr.style.display = 'none';
         if (cashNote) cashNote.style.display = 'none';
         
-        // Show appropriate QR
-        if (selected === 'esewa') {
+        if (selected === 'khalti') {
+            if (khaltiBox) khaltiBox.style.display = 'block';
+            if (qrContainer) qrContainer.style.display = 'block';
+            if (uploadSection) uploadSection.style.display = 'none';
+            if (proceedBtn) {
+                proceedBtn.innerHTML = 'Pay with Khalti (NPR ' + finalPrice + ') &rarr;';
+                proceedBtn.style.background = '#5c2d91';
+                proceedBtn.style.borderColor = '#5c2d91';
+                proceedBtn.style.color = '#ffffff';
+            }
+        } else if (selected === 'esewa') {
             if (esewaQr) esewaQr.style.display = 'block';
             if (qrContainer) qrContainer.style.display = 'block';
             if (uploadSection) uploadSection.style.display = 'block';
+            if (proceedBtn) {
+                proceedBtn.innerHTML = 'Confirm Esewa Payment';
+                proceedBtn.style.background = '#000000';
+                proceedBtn.style.borderColor = '#000000';
+                proceedBtn.style.color = '#ffffff';
+            }
         } else if (selected === 'bank') {
             if (bankQr) bankQr.style.display = 'block';
             if (qrContainer) qrContainer.style.display = 'block';
             if (uploadSection) uploadSection.style.display = 'block';
+            if (proceedBtn) {
+                proceedBtn.innerHTML = 'Confirm Bank Transfer';
+                proceedBtn.style.background = '#000000';
+                proceedBtn.style.borderColor = '#000000';
+                proceedBtn.style.color = '#ffffff';
+            }
         } else if (selected === 'cash') {
             if (cashNote) cashNote.style.display = 'block';
             if (qrContainer) qrContainer.style.display = 'block';
             if (uploadSection) uploadSection.style.display = 'none';
-        } else {
-            if (qrContainer) qrContainer.style.display = 'none';
-            if (uploadSection) uploadSection.style.display = 'none';
+            if (proceedBtn) {
+                proceedBtn.innerHTML = 'Confirm Cash Appointment';
+                proceedBtn.style.background = '#000000';
+                proceedBtn.style.borderColor = '#000000';
+                proceedBtn.style.color = '#ffffff';
+            }
         }
     }
     

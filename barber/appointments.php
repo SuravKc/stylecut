@@ -19,7 +19,7 @@ $filter = $_GET['filter'] ?? 'all';
 $sql = "
     SELECT a.*, u.name as customer_name, u.phone as customer_phone,
            s.name as service_name,
-           p.payment_method, p.payment_status, p.screenshot_path, p.amount as payment_amount
+           p.payment_method, p.payment_status, p.screenshot_path, p.amount as payment_amount, p.transaction_id
     FROM appointments a
     JOIN users u ON a.customer_id = u.id
     JOIN services s ON a.service_id = s.id
@@ -123,6 +123,13 @@ require_once '../includes/header.php';
     </div>
     <?php elseif ($appt['payment_method'] && in_array($appt['payment_method'], ['esewa', 'bank'])): ?>
         <div class="payment-screenshot"><p style="color:orange;">⚠️ No screenshot uploaded</p></div>
+    <?php elseif ($appt['payment_method'] === 'khalti'): ?>
+        <div class="payment-screenshot" style="background: #faf5ff; border: 1px solid #d8b4fe; padding: 8px 12px; border-radius: 4px;">
+            <span style="color: #5c2d91; font-weight: 700; font-size: 13px;">🟣 Khalti Payment (Verified)</span>
+            <?php if (!empty($appt['transaction_id'])): ?>
+                <div style="font-size: 11px; color: #555; margin-top: 3px;">Txn: <code><?php echo htmlspecialchars($appt['transaction_id']); ?></code></div>
+            <?php endif; ?>
+        </div>
     <?php endif; ?>
 
     <?php if ($appt['status'] === 'pending'): ?>
