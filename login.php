@@ -22,6 +22,8 @@ if (!empty($redirect_target)) {
 $notice = '';
 if (isset($_GET['msg']) && $_GET['msg'] === 'login_required') {
     $notice = 'Please log in to your account or register to complete your appointment booking.';
+} elseif (isset($_GET['msg']) && $_GET['msg'] === 'logged_out') {
+    $notice = 'You have been successfully logged out. Please log in to continue.';
 }
 
 $initial_role = $_GET['role'] ?? ($_POST['role'] ?? 'customer');

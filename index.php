@@ -49,6 +49,11 @@ if (!function_exists('getServiceMeta')) {
 require_once 'includes/header.php';
 ?>
 
+<?php if (isset($_GET['msg']) && $_GET['msg'] === 'logged_out'): ?>
+    <div style="margin: 20px 0; background: #d4edda; border: 2px solid #155724; color: #155724; padding: 14px 20px; font-weight: 600; text-align: center; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        ✓ You have been successfully logged out of StyleCut Nepal. See you again soon!
+    </div>
+<?php endif; ?>
 
 <!-- ==================================================
      HERO SECTION

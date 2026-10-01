@@ -113,3 +113,74 @@ function confirmCancel(appointmentId) {
         window.location.href = 'cancel-booking.php?id=' + appointmentId;
     }
 }
+
+// ==============================================
+// Logout Confirmation Modal Handler
+// ==============================================
+(function() {
+    function setupLogoutModal() {
+        const logoutModal = document.getElementById('logoutModal');
+        if (!logoutModal) return;
+
+        const cancelBtn = document.getElementById('logoutCancelBtn');
+        const closeBtn = document.getElementById('logoutModalCloseBtn');
+        const confirmBtn = document.getElementById('logoutConfirmBtn');
+
+        function openModal(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            logoutModal.style.display = 'flex';
+            // Force browser reflow to trigger CSS opacity & transform transitions
+            void logoutModal.offsetWidth;
+            logoutModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            if (cancelBtn) {
+                cancelBtn.focus();
+            }
+        }
+
+        function closeModal() {
+            logoutModal.classList.remove('active');
+            document.body.style.overflow = '';
+            setTimeout(function() {
+                if (!logoutModal.classList.contains('active')) {
+                    logoutModal.style.display = 'none';
+                }
+            }, 250);
+        }
+
+        // Attach to all logout links (excluding the confirm button inside modal itself)
+        document.querySelectorAll('a[href*="logout.php"]:not(#logoutConfirmBtn), .logout-trigger').forEach(function(link) {
+            link.addEventListener('click', openModal);
+        });
+
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+        // Click on backdrop (outside card) closes modal
+        logoutModal.addEventListener('click', function(e) {
+            if (e.target === logoutModal) {
+                closeModal();
+            }
+        });
+
+        // ESC key closes modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && logoutModal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        // Global function for direct invocation if needed
+        window.openLogoutModal = openModal;
+        window.closeLogoutModal = closeModal;
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupLogoutModal);
+    } else {
+        setupLogoutModal();
+    }
+})();
