@@ -2302,6 +2302,7 @@ footer {
     line-height: 1.25;
     min-height: 54px;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
@@ -2315,6 +2316,7 @@ footer {
     flex-grow: 1;
     min-height: 48px;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
